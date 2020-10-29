@@ -30,32 +30,11 @@ public class DeviceService {
         return devicesRepository.findAll();
     }
 
-    @Async
-    public CompletableFuture<List<Device>> findAllAsync() throws InterruptedException {
-        logger.info("get device by " + Thread.currentThread().getName());
-        List<Device> devices = devicesRepository.findAll();
-        TimeUnit.SECONDS.sleep(1);
-        TimeUnit.SECONDS.sleep(1);
-        logger.info("get device by " + Thread.currentThread().getName());
-        TimeUnit.SECONDS.sleep(1);
-        TimeUnit.SECONDS.sleep(1);
-        logger.info("get device by {}", devices.size(), "" + Thread.currentThread().getName());
-        return CompletableFuture.completedFuture(devices);
-    }
-
-    public void createDevices(Device devices) {
-        devicesRepository.save(devices);
-    }
-
     public List<Device> saveAll(List<Device> devices) {
         for (Device device : devices) {
             device.setUpdated_at(LocalDateTime.now());
         }
         return devicesRepository.saveAll(devices);
-    }
-
-    public Device findById(Long deviceId){
-        return devicesRepository.findById(deviceId).orElse(null);
     }
 
     public ResponseEntity<Object> updateDevices(List<Device> devices){
