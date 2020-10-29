@@ -8,6 +8,7 @@ import devicesManagement.service.DeviceService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 public class DeviceController {
@@ -39,13 +40,13 @@ public class DeviceController {
         return deviceService.updateDevices(devices);
     }
 
-    @RequestMapping("/")
-    public String index() {
-        return "Greetings from Spring Boot!";
-    }
-
     @GetMapping("/ping")
     ResponseEntity<Object> pingDevices() {
         return deviceService.pingDevices();
+    }
+
+    @GetMapping("/pingAsync")
+    CompletableFuture<ResponseEntity<Object>> pingDevicesAsync() {
+        return deviceService.pingDevicesAsync();
     }
 }

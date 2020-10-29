@@ -1,17 +1,24 @@
 package devicesManagement.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import devicesManagement.entity.Device;
 import devicesManagement.repository.DevicesRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class DeviceService {
+    Logger logger = LoggerFactory.getLogger(DeviceService.class);
+
     @Autowired
     private final DevicesRepository devicesRepository;
 
@@ -21,6 +28,19 @@ public class DeviceService {
 
     public List<Device> findAll(){
         return devicesRepository.findAll();
+    }
+
+    @Async
+    public CompletableFuture<List<Device>> findAllAsync() throws InterruptedException {
+        logger.info("get device by " + Thread.currentThread().getName());
+        List<Device> devices = devicesRepository.findAll();
+        TimeUnit.SECONDS.sleep(1);
+        TimeUnit.SECONDS.sleep(1);
+        logger.info("get device by " + Thread.currentThread().getName());
+        TimeUnit.SECONDS.sleep(1);
+        TimeUnit.SECONDS.sleep(1);
+        logger.info("get device by {}", devices.size(), "" + Thread.currentThread().getName());
+        return CompletableFuture.completedFuture(devices);
     }
 
     public void createDevices(Device devices) {
@@ -97,7 +117,28 @@ public class DeviceService {
         if (devicesAvailable) {
             return new ResponseEntity<>("All devices available", HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(badResponse.toString(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(badResponse.toString(), HttpStatus.OK);
+        }
+    }
+
+    @Async
+    public CompletableFuture<ResponseEntity<Object>> pingDevicesAsync() {
+        List<Device> devices = devicesRepository.findAll();
+        StringBuilder badResponse = new StringBuilder("Inaccessible devices:");
+        boolean devicesAvailable = true;
+        for (Device device : devices) {
+            if (!device.isStatus()) {
+                devicesAvailable = false;
+                badResponse.append("\n").append(device.getIp());
+            }
+            logger.info("get device by " + Thread.currentThread().getName());
+            device.setUpdated_at(LocalDateTime.now());
+        }
+
+        if (devicesAvailable) {
+            return CompletableFuture.completedFuture(new ResponseEntity<>("All devices available", HttpStatus.OK));
+        } else {
+            return CompletableFuture.completedFuture(new ResponseEntity<>(badResponse.toString(), HttpStatus.OK));
         }
     }
 }
